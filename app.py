@@ -34,27 +34,155 @@ df = df
 
 rf = df.groupby('County')['Referrals'].count().reset_index()
 
-
+font_awesome = "https://use.fontawesome.com/releases/v5.10.2/css/all.css"
+meta_tags = [{"name": "viewport", "content": "width=device-width"}]
+external_stylesheets = [meta_tags, font_awesome]
 
 
 app = Dash(__name__)
-server = app.server
 
 app.layout = html.Div([
+
 
             html.Div([
                 html.Div([
                     html.Div([
-                        html.H3('Empower Upper Cumberland', style = {"margin-bottom": "0px", 'color': 'white'}),
+                        html.Img(src=r'assets/img/logo_euc.png', style={'margin-left': '0px'}),
+                        #html.H3('Empower Upper Cumberland', style = {"margin-bottom": "0px", 'color': 'white'}),
                     ]),
                 ], className="six column", id="title"),
 
             ], id="header", className="row flex-display", style={"margin-bottom": "25px"}),
 
-            html.Div([
-                dcc.Graph(figure=px.histogram(rf, x=rf['County'], y=rf['Referrals']))
-            ], className="create_container twelve columns"),
+# THE IS THE TOP ROW UNDER LOGO
 
+        # html.Div([
+        #
+        #     html.Div([
+        #         html.Div(id='text1',
+        #                  className='card_size'),
+        #         html.Div([
+        #             dcc.Graph(id='chart1',
+        #                       config={'displayModeBar': False}),
+        #         ], className='chart')
+        #     ], className='text_graph_column'),
+        #
+        #     html.Div([
+        #         html.Div(id='text2',
+        #                  className='card_size'),
+        #         html.Div([
+        #             dcc.Graph(id='chart2',
+        #                       config={'displayModeBar': False}),
+        #         ], className='chart')
+        #     ], className='text_graph_column'),
+        #
+        #     html.Div([
+        #         html.Div(id='text3',
+        #                  className='card_size'),
+        #         html.Div([
+        #             dcc.Graph(id='chart3',
+        #                       config={'displayModeBar': False}),
+        #         ], className='chart')
+        #     ], className='text_graph_column'),
+        #
+        #     html.Div([
+        #         html.Div(id='text4',
+        #                  className='card_size'),
+        #         html.Div([
+        #             dcc.Graph(id='chart4',
+        #                       config={'displayModeBar': False}),
+        #         ], className='chart')
+        #     ], className='text_graph_column'),
+        #
+        #     html.Div([
+        #         html.Div(id='text5',
+        #                  className='card_size'),
+        #         html.Div([
+        #             dcc.Graph(id='chart5',
+        #                       config={'displayModeBar': False}),
+        #         ], className='chart')
+        #     ], className='text_graph_column'),
+        #
+        #     html.Div([
+        #         html.Div(id='text6',
+        #                  className='card_size'),
+        #         html.Div([
+        #             dcc.Graph(id='chart6',
+        #                       config={'displayModeBar': False}),
+        #         ], className='chart')
+        #     ], className='text_graph_column'),
+        #
+        # ], className='flex_container'),
+
+# BEGIN 2ND ROW
+
+            html.Div([
+                dcc.Graph(id='ref_chart',
+                          figure={
+
+                              'data': [go.Bar(
+                                  x=rf['County'],
+                                  y=rf['Referrals'],
+                                  text=rf['Referrals']
+                              )],
+                              'layout': go.Layout(
+                                  plot_bgcolor='#010915',
+                                  paper_bgcolor='#010915',
+                                  title='Referrals by Counties',
+                                  titlefont={'color': 'white', 'size': 20},
+                                  xaxis=dict(title='<b>County</b>',
+                                             tick0=0,
+                                             dtick=1,
+                                             color='white',
+                                             showline=True,
+                                             showgrid=True,
+                                             showticklabels=True,
+                                             linecolor='white',
+                                             linewidth=2,
+                                             ticks='outside',
+                                             tickfont=dict(
+                                                 family='Arial',
+                                                 size=12,
+                                                 color='white'
+                                             )
+
+                                             ),
+                                  yaxis=dict(title='<b>Count (#)</b>',
+                                             color='white',
+                                             showline=True,
+                                             showgrid=True,
+                                             showticklabels=True,
+                                             linecolor='white',
+                                             linewidth=2,
+                                             ticks='outside',
+                                             tickfont=dict(
+                                                 family='Arial',
+                                                 size=12,
+                                                 color='white'
+                                             )
+
+                                             ),
+                                  legend={
+                                      'orientation': 'h',
+                                      'bgcolor': '#010915',
+                                      'xanchor': 'center', 'x': 0.5, 'y': -0.3},
+                                  font=dict(
+                                      family="sans-serif",
+                                      size=12,
+                                      color='white'),
+                              ),
+
+                          }),
+
+            ], className = "create_container twelve columns"),
+
+            html.Div(
+                html.Hr(),
+            ),
+
+
+
+# BEGIN 3RD ROW
 
             html.Div([
                 html.Div([
@@ -65,51 +193,58 @@ app.layout = html.Div([
                                  value=tenn1['COUNTY'].min()),
 
                     html.Br([]),
-                    html.H5('Summary', style={'color': 'orange'}),
+                    html.H5('Summary:', style={'color': 'orange'}),
                     html.Hr(),
                     html.P(id="population", style={'color': 'orange'}),
                     html.P(id="households", style={'color': 'orange'}),
                     html.P(id="families", style={'color': 'orange'}),
                     html.P(id="snap", style={'color': 'orange'}),
 
-                ], className="create_container four columns"),
+                ], className="create_container two columns"),
 
                 html.Div([
                     dcc.Graph(id='map_1',
                               config={'displayModeBar': 'hover'}),
 
-                ], className="create_container 8 columns"),
+                ], className="create_container ten columns"),
             ], className="row flex-display"),
 
             html.Div([
 
                 html.Div([
-                    dcc.Graph(id='graph',
-                              config = {'displayModeBar': 'hover'}),
+                    dcc.Graph(id='graph'),
 
-                ], className="create_container 2 columns"),
+                ], className="create_container six columns"),
 
                 html.Div([
                     dcc.Graph(id='graph2'),
 
-                ], className="create_container 2 columns"),
+                ], className="create_container six columns"),
+
+            ], className="row flex-display"),
+
+            html.Div([
 
                 html.Div([
                     dcc.Graph(id='graph3'),
 
-                ], className="create_container 2 columns"),
+                ], className="create_container six columns"),
 
                 html.Div([
                     dcc.Graph(id='graph4'),
 
-                ], className="create_container 2 columns"),
+                ], className="create_container six columns"),
 
-            ], className="row flex-display"),
+                # html.Div([
+                #     #see webbage: https://censusreporter.org/profiles/05000US35001-bernalillo-county-nm/
+                #     #see youtube vid: https://youtu.be/UA8Zp7tdmjs
+                #     html.Iframe(src="https://s3.amazonaws.com/embed.censusreporter.org/1.0/iframe.html?geoID=05000US35001&chartDataID=economics-poverty-children&dataYear=2021&releaseID=ACS_2021_1-year&chartType=pie&chartHeight=200&chartQualifier=&chartTitle=Children+(Under+18)&initialSort=&statType=percentage"),
+                #
+                # ]),
 
+        ], className='row flex-display'),
 
-], id="mainContainer", style={"display": "flex", "flex-direction": "column"})
-
-
+], id = "mainContainer", style = {"display": "flex", "flex-direction": "column"})
 
 @callback(
     Output('population', 'children'),
@@ -119,7 +254,6 @@ def get_county(selected_county):
     population = tenn[tenn['COUNTY'] == selected_county]
     pop = population['POPULATION'].sum()
     return html.P('Population: {:,}'.format(pop))
-
 
 @callback(Output('households', 'children'),
     Input('county_dropdown', 'value'))
@@ -136,7 +270,6 @@ def get_family_value(selected_county):
     filtered = tenn[tenn['COUNTY'] == selected_county]
     fam = filtered['FAMILIES'].sum()
     return html.P('Families: {:,}'.format(fam))
-
 
 @callback(Output('snap', 'children'),
           Input('county_dropdown', 'value'))
@@ -183,11 +316,61 @@ def get_referrals(county_dropdown):
         month = final['month_desc']
         value = final['Referrals']
 
-    fig = px.bar(final,
-                 x=month,
-                 y=value)
 
-    return fig
+    return {
+        'data': [go.Bar(
+            x=month,
+            y=value,
+            text=value,
+        )],
+        'layout': go.Layout(
+            plot_bgcolor='#010915',
+            paper_bgcolor='#010915',
+            title=county_dropdown + ' Referrals',
+            titlefont={'color': 'white', 'size': 20},
+            xaxis=dict(title='<b>Months (CY23)</b>',
+                       tick0=0,
+                       dtick=1,
+                       color='white',
+                       showline=True,
+                       showgrid=True,
+                       showticklabels=True,
+                       linecolor='white',
+                       linewidth=2,
+                       ticks='outside',
+                       tickfont=dict(
+                           family='Arial',
+                           size=12,
+                           color='white'
+                       )
+
+                       ),
+            yaxis=dict(title='<b>Count (#)</b>',
+                       color='white',
+                       showline=True,
+                       showgrid=True,
+                       showticklabels=True,
+                       linecolor='white',
+                       linewidth=2,
+                       ticks='outside',
+                       tickfont=dict(
+                           family='Arial',
+                           size=12,
+                           color='white'
+                       )
+
+                       ),
+            legend={
+                'orientation': 'h',
+                'bgcolor': '#010915',
+                'xanchor': 'center', 'x': 0.5, 'y': -0.3},
+            font=dict(
+                family="sans-serif",
+                size=12,
+                color='white'),
+        )
+    }
+
 
 # -----------------------------------------------------  ENROLLMENTS GRAPH ------------ |
 @callback(Output('graph2', 'figure'),
@@ -226,9 +409,60 @@ def get_referrals(county_dropdown):
         month = final['month_desc']
         value = final['Enrollments']
 
-    fig = px.bar(final, x=month, y=value)
 
-    return fig
+    return {
+        'data': [go.Bar(
+            x=month,
+            y=value,
+            text=value,
+        )],
+        'layout': go.Layout(
+            plot_bgcolor='#010915',
+            paper_bgcolor='#010915',
+            title=county_dropdown + ' Enrollments',
+            titlefont={'color': 'white', 'size': 20},
+            xaxis=dict(title='<b>Months (CY23)</b>',
+                       tick0=0,
+                       dtick=1,
+                       color='white',
+                       showline=True,
+                       showgrid=True,
+                       showticklabels=True,
+                       linecolor='white',
+                       linewidth=2,
+                       ticks='outside',
+                       tickfont=dict(
+                           family='Arial',
+                           size=12,
+                           color='white'
+                       )
+
+                       ),
+            yaxis=dict(title='<b>Count (#)</b>',
+                       color='white',
+                       showline=True,
+                       showgrid=True,
+                       showticklabels=True,
+                       linecolor='white',
+                       linewidth=2,
+                       ticks='outside',
+                       tickfont=dict(
+                           family='Arial',
+                           size=12,
+                           color='white'
+                       )
+
+                       ),
+            legend={
+                'orientation': 'h',
+                'bgcolor': '#010915',
+                'xanchor': 'center', 'x': 0.5, 'y': -0.3},
+            font=dict(
+                family="sans-serif",
+                size=12,
+                color='white'),
+        )
+    }
 
 
 # -----------------------------------------------------  SERVICES GRAPH ------------ |
@@ -268,9 +502,61 @@ def get_referrals(county_dropdown):
         month = final['month_desc']
         value = final['Services']
 
-    fig = px.bar(final, x=month, y=value)
 
-    return fig
+
+    return {
+        'data': [go.Bar(
+            x=final['month_desc'],
+            y=final['Services'],
+            text=value,
+        )],
+        'layout': go.Layout(
+            plot_bgcolor='#010915',
+            paper_bgcolor='#010915',
+            title=county_dropdown + ' Services',
+            titlefont={'color': 'white', 'size': 20},
+            xaxis=dict(title='<b>Months (CY23)</b>',
+                       tick0=0,
+                       dtick=1,
+                       color='white',
+                       showline=True,
+                       showgrid=True,
+                       showticklabels=True,
+                       linecolor='white',
+                       linewidth=2,
+                       ticks='outside',
+                       tickfont=dict(
+                           family='Arial',
+                           size=12,
+                           color='white'
+                       )
+
+                       ),
+            yaxis=dict(title='<b>Count (#)</b>',
+                       color='white',
+                       showline=True,
+                       showgrid=True,
+                       showticklabels=True,
+                       linecolor='white',
+                       linewidth=2,
+                       ticks='outside',
+                       tickfont=dict(
+                           family='Arial',
+                           size=12,
+                           color='white'
+                       )
+
+                       ),
+            legend={
+                'orientation': 'h',
+                'bgcolor': '#010915',
+                'xanchor': 'center', 'x': 0.5, 'y': -0.3},
+            font=dict(
+                family="sans-serif",
+                size=12,
+                color='white'),
+        )
+    }
 
 # -----------------------------------------------------  SERVICES GRAPH ------------ |
 @callback(Output('graph4', 'figure'),
@@ -309,9 +595,60 @@ def get_referrals(county_dropdown):
         month = final['month_desc']
         value = final['Payments']
 
-    fig = px.bar(final, x=month, y=value)
+    return {
+        'data': [go.Bar(
+            x=final['month_desc'],
+            y=final['Payments'],
+            text=value,
+        )],
+        'layout': go.Layout(
+            plot_bgcolor='#010915',
+            paper_bgcolor='#010915',
+            title=county_dropdown + ' Payments',
+            titlefont={'color': 'white', 'size': 20},
+            xaxis=dict(title='<b>Months (CY23)</b>',
+                       tick0=0,
+                       dtick=1,
+                       color='white',
+                       showline=True,
+                       showgrid=True,
+                       showticklabels=True,
+                       linecolor='white',
+                       linewidth=2,
+                       ticks='outside',
+                       tickfont=dict(
+                           family='Arial',
+                           size=12,
+                           color='white'
+                       )
 
-    return fig
+                       ),
+            yaxis=dict(title='<b>$ Payments</b>',
+                       color='white',
+                       showline=True,
+                       showgrid=True,
+                       showticklabels=True,
+                       linecolor='white',
+                       linewidth=2,
+                       ticks='outside',
+                       tickfont=dict(
+                           family='Arial',
+                           size=12,
+                           color='white'
+                       )
+
+                       ),
+            legend={
+                'orientation': 'h',
+                'bgcolor': '#010915',
+                'xanchor': 'center', 'x': 0.5, 'y': -0.3},
+            font=dict(
+                family="sans-serif",
+                size=12,
+                color='white'),
+        )
+    }
+
 
 
 if __name__ == '__main__':

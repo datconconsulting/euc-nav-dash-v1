@@ -40,6 +40,7 @@ external_stylesheets = [meta_tags, font_awesome]
 
 
 app = Dash(__name__)
+server = app.server
 
 app.layout = html.Div([
 

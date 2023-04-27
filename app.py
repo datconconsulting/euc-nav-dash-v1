@@ -6,18 +6,29 @@ import plotly.graph_objs as go
 import plotly.express as px
 import pandas as pd
 from dash.exceptions import PreventUpdate
+from urllib.request import urlopen
+import json
+with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
+    counties = json.load(response)
+
+token = 'pk.eyJ1IjoiZGF2ZWxvcGV6MDA3IiwiYSI6ImNsZ3h0MG9iOTAycWczanFxZzY5Y2Y5MjEifQ.QoxccNn-9v6NXNLliRipwQ'
+dark_mode = 'mapbox://styles/mapbox/dark-v9'
 
 
 # -- SOURCE DATA
-df1 = pd.read_csv('main.csv')  # US CENSUS DATA
+df1 = pd.read_csv('euc_lat_lon.csv')  # US CENSUS DATA
 df = pd.read_csv('euc_data.csv')  # VICKIE RAW DATA
 
+#df1['GEOID'] = df1['GEOID'].astype(str)
 
 tenn = df1['STATE_NAME'] == ' Tennessee'# GET LISTING OF TENNESSEE COUNTIES ONLY.
 co = df1['COUNTY'].isin(['Cannon County', 'Clay County', 'Cumberland County', 'Dekalb County', 'Fentress County', 'Jackson County',
                         'Macon County', 'Overton County', 'Pickett County', 'Putnam County', 'Smith County', 'Van Buren County',
                          'Warren County', 'White County'])
 tenn1 = df1[tenn & co]
+
+list_locations = tenn1.set_index('COUNTY')[['latitude', 'longitude']].T.to_dict('dict')
+print(tenn1)
 
 county_options = []
 for county in tenn1['COUNTY'].unique():
@@ -40,7 +51,6 @@ external_stylesheets = [meta_tags, font_awesome]
 
 
 app = Dash(__name__)
-server = app.server
 
 app.layout = html.Div([
 
@@ -280,6 +290,118 @@ def get_snap_value(selected_county):
     snap = filtered['SNAP'].sum()
     return html.P('On SNAP: {:,}'.format(snap))
 
+
+#MAP
+
+@callback(Output('map_1', 'figure'),
+    [Input('county_dropdown', 'value')])
+def update_graph(county_dropdown):
+    filtered = tenn1[tenn1['COUNTY'] == county_dropdown]
+
+    if county_dropdown:
+        zoom = 8
+        zoom_lat = list_locations[county_dropdown]['latitude']
+        zoom_lon = list_locations[county_dropdown]['longitude']
+
+    return {
+        'data': [go.Choroplethmapbox(geojson=counties,
+                                     locations=filtered.GEOID,
+                                     z=filtered.POPULATION,
+                                     colorscale="Viridis",
+                                     zmin=0, zmax=100000,
+                                     colorbar_title='POPULATION',
+                                     marker_opacity=0.6,
+                                     marker_line_width=0,
+                                     hoverinfo='text',
+                                     hovertext=
+                                     '<b>County</b>: ' + filtered['COUNTY'].astype(str) + '<br>' +
+                                     '<b>Population</b>: ' + filtered['POPULATION'].astype(str) + '<br>' +
+                                     '<b>Households</b>: ' + filtered['HOUSEHOLDS'].astype(str) + '<br>' +
+                                     '<b>Families</b>: ' + filtered['FAMILIES'].astype(str) + '<br>' +
+                                     '<b>SNAP</b>: ' + filtered['SNAP'].astype(str) + '<br>'
+
+                )],
+
+        'layout': go.Layout(
+            margin={"r": 0, "t": 0, "l": 0, "b": 0},
+            hovermode='closest',
+            mapbox=dict(
+                accesstoken=token,  # Use mapbox token here
+                center=go.layout.mapbox.Center(lat=zoom_lat, lon=zoom_lon),
+                #style='dark',
+                zoom=zoom,
+                style='carto-positron',
+                #style='open-street-map'
+
+            ),
+            autosize = True,
+
+        ),
+    }
+#
+#     fig = px.choropleth_mapbox(
+#         df, geojson=geojson, color=candidate,
+#         locations="district", featureidkey="properties.district",
+#         center={"lat": 45.5517, "lon": -73.7073}, zoom=9,
+#         range_color=[0, 6500])
+#     fig.update_layout(
+#         margin={"r":0,"t":0,"l":0,"b":0},
+#         mapbox=dict(
+#                 accesstoken=token,  # Use mapbox token here
+#                 style=dark_mode,
+#             ), autosize=True),
+#
+#     return fig
+
+#MAP2
+# @callback(Output('map_1', 'figure'),
+#     [Input('county_dropdown', 'value')])
+# def update_graph(county_dropdown):
+#     filtered = df1[df1['COUNTY'] == county_dropdown]
+#
+#     if county_dropdown:
+#         zoom = 8
+#         zoom_lat = list_locations[county_dropdown]['latitude']
+#         zoom_lon = list_locations[county_dropdown]['longitude']
+#
+#
+#     return {
+#         'data': [go.Scattermapbox(
+#             lon = filtered['longitude'],
+#             lat = filtered['latitude'],
+#             mode = 'markers',
+#             marker = go.scattermapbox.Marker(
+#                 #size = filtered['POPULATION'],
+#                 color = filtered['POPULATION'],
+#                 colorscale = 'hsv',
+#                 showscale = False,
+#                 sizemode = 'area'),
+#
+#             hoverinfo = 'text',
+#             hovertext=
+#             '<b>County</b>: ' + filtered['COUNTY'].astype(str) + '<br>' +
+#             '<b>Population</b>: ' + filtered['POPULATION'].astype(str) + '<br>' +
+#             '<b>Households</b>: ' + filtered['HOUSEHOLDS'].astype(str) + '<br>' +
+#             '<b>Families</b>: ' + filtered['FAMILIES'].astype(str) + '<br>' +
+#             '<b>SNAP</b>: ' + filtered['SNAP'].astype(str) + '<br>'
+#
+#         )],
+#
+#         'layout': go.Layout(
+#             margin = {"r": 0, "t": 0, "l": 0, "b": 0},
+#             hovermode = 'closest',
+#             mapbox = dict(
+#                 accesstoken = token,  # Use mapbox token here
+#                 center = go.layout.mapbox.Center(lat = zoom_lat, lon = zoom_lon),
+#                 #style='open-street-map',
+#                 style = 'dark',
+#                 zoom = zoom
+#             ),
+#             autosize = True,
+#
+#         )
+#
+#     }
 # -----------------------------------------------------  REFERRALS GRAPH ------------ |
 @callback(Output('graph', 'figure'),
     [Input('county_dropdown', 'value')])
@@ -558,7 +680,6 @@ def get_referrals(county_dropdown):
                 color='white'),
         )
     }
-
 # -----------------------------------------------------  SERVICES GRAPH ------------ |
 @callback(Output('graph4', 'figure'),
     [Input('county_dropdown', 'value')])

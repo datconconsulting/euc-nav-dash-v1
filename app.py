@@ -15,12 +15,10 @@ token = 'pk.eyJ1IjoiZGF2ZWxvcGV6MDA3IiwiYSI6ImNsZ3h0MG9iOTAycWczanFxZzY5Y2Y5MjEi
 dark_mode = 'mapbox://styles/mapbox/dark-v9'
 
 
-# -- SOURCE DATA
+# -- SOURCE DATA - CENSUS
+
+
 df1 = pd.read_csv('euc_lat_lon.csv')  # US CENSUS DATA
-df = pd.read_csv('euc_data.csv')  # VICKIE RAW DATA
-
-#df1['GEOID'] = df1['GEOID'].astype(str)
-
 tenn = df1['STATE_NAME'] == ' Tennessee'# GET LISTING OF TENNESSEE COUNTIES ONLY.
 co = df1['COUNTY'].isin(['Cannon County', 'Clay County', 'Cumberland County', 'Dekalb County', 'Fentress County', 'Jackson County',
                         'Macon County', 'Overton County', 'Pickett County', 'Putnam County', 'Smith County', 'Van Buren County',
@@ -28,7 +26,21 @@ co = df1['COUNTY'].isin(['Cannon County', 'Clay County', 'Cumberland County', 'D
 tenn1 = df1[tenn & co]
 
 list_locations = tenn1.set_index('COUNTY')[['latitude', 'longitude']].T.to_dict('dict')
-print(tenn1)
+
+# -- SOURCE DATA - EUC
+df = pd.read_csv('euc_data.csv')  # VICKIE RAW DATA
+
+
+# -- SOURCE DATA - INDEED
+indeedData = pd.read_csv('indeed.csv')
+indeedData.sort_values(by=['companyRating'], inplace=True, ascending=False)
+bs = indeedData[:50]
+bs = bs[['company','companyRating','jobTitle']]
+bs1 = bs.drop_duplicates(subset=['companyRating'])
+x_indeed = bs1['company'].to_list()
+y_indeed = bs1['companyRating'].to_list()
+jobtitle = bs1['jobTitle'].to_list()
+
 
 county_options = []
 for county in tenn1['COUNTY'].unique():
@@ -51,7 +63,6 @@ external_stylesheets = [meta_tags, font_awesome]
 
 
 app = Dash(__name__)
-server = app.server
 
 app.layout = html.Div([
 
@@ -140,7 +151,7 @@ app.layout = html.Div([
                               'layout': go.Layout(
                                   plot_bgcolor='#010915',
                                   paper_bgcolor='#010915',
-                                  title='Referrals by Counties',
+                                  title='Referrals by County',
                                   titlefont={'color': 'white', 'size': 20},
                                   xaxis=dict(title='<b>County</b>',
                                              tick0=0,
@@ -199,10 +210,13 @@ app.layout = html.Div([
             html.Div([
                 html.Div([
 
-                    html.H3('Select County:', className='fix_label', style={'color': 'grey', 'margin-left': '1%'}),
+                    html.H3('Select County:', className='fix_label', style={'color': 'orange', 'margin-left': '1%'}),
                     dcc.Dropdown(id='county_dropdown',
                                  options=county_options,
-                                 value=tenn1['COUNTY'].min()),
+                                 value=tenn1['COUNTY'].min(),
+                                 style={
+                                     'color': 'orange',
+                                 }, className = 'dcc_compon'),
 
                     html.Br([]),
                     html.H5('Summary:', style={'color': 'orange'}),
@@ -255,6 +269,106 @@ app.layout = html.Div([
                 # ]),
 
         ], className='row flex-display'),
+
+            html.Div([
+                html.Hr(),
+                html.H3('Available Jobs! www.indeed.com', style={'color': 'white'})
+            ]),
+
+            html.Div([
+                html.Div([
+                    dash_table.DataTable(
+                        data=indeedData.to_dict('records'),
+                        export_format='csv',
+                        page_size=30,
+                        columns=[{'id': c, 'name': c} for c in indeedData.columns],
+                        page_action='none',
+                        fixed_rows={'headers': True},
+                        style_table={
+                            'maxHeight': "400px",
+                            'overflowY': 'auto',
+                            'overflowX': 'auto',
+                        },
+                        style_cell={'textAlign': 'left'},
+                        style_data={
+                            'color': 'black',
+                            'backgroundColor': 'white'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': 'rgb(220, 220, 220)',
+                            }
+                        ],
+                        style_header={
+                            'backgroundColor': 'rgb(210, 210, 210)',
+                            'color': 'black',
+                            'fontWeight': 'bold'
+                        }
+                    )
+                ], className='create_container twelve columns')
+            ], className='row flex-display'),
+
+        html.Div([
+            dcc.Graph(id='indeed_chart',
+                      figure={
+
+                          'data': [go.Bar(
+                              x=x_indeed,
+                              y=y_indeed,
+                              text=y_indeed,
+                          )],
+                          'layout': go.Layout(
+                              plot_bgcolor='#010915',
+                              paper_bgcolor='#010915',
+                              title='Highest Rated Companies',
+                              titlefont={'color': 'white', 'size': 20},
+                              xaxis=dict(title='<b>Company</b>',
+                                         tick0=0,
+                                         dtick=1,
+                                         color='white',
+                                         showline=True,
+                                         showgrid=True,
+                                         showticklabels=True,
+                                         linecolor='white',
+                                         linewidth=2,
+                                         ticks='outside',
+                                         tickfont=dict(
+                                             family='Arial',
+                                             size=12,
+                                             color='white'
+                                         )
+
+                                         ),
+                              yaxis=dict(title='<b>Rating (likert 1-5)</b>',
+                                         color='white',
+                                         showline=True,
+                                         showgrid=True,
+                                         showticklabels=True,
+                                         linecolor='white',
+                                         linewidth=2,
+                                         ticks='outside',
+                                         tickfont=dict(
+                                             family='Arial',
+                                             size=12,
+                                             color='white'
+                                         )
+
+                                         ),
+                              legend={
+                                  'orientation': 'h',
+                                  'bgcolor': '#010915',
+                                  'xanchor': 'center', 'x': 0.5, 'y': -0.3},
+                              font=dict(
+                                  family="sans-serif",
+                                  size=12,
+                                  color='white'),
+                          ),
+
+                      }),
+
+        ], className="create_container twelve columns"),
+
 
 ], id = "mainContainer", style = {"display": "flex", "flex-direction": "column"})
 
